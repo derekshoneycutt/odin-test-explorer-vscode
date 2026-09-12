@@ -33,7 +33,85 @@
             "type": "string"
           },
           "default": [],
+          "scope": "resource",
           "description": "Additional arguments passed to odin test before runtime test arguments."
+        },
+        "odinTestExplorer.argumentProvider": {
+          "type": "object",
+          "scope": "resource",
+          "description": "Command that prints additional Odin test arguments as JSON. The workspace must be trusted.",
+          "required": [
+            "command"
+          ],
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "Executable or script to run. Supports ${workspaceFolder}, ${packagePath}, ${userHome}, and ${env:NAME}."
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": [],
+              "description": "Provider arguments. Supports ${workspaceFolder}, ${packagePath}, ${userHome}, and ${env:NAME}."
+            },
+            "cwd": {
+              "type": "string",
+              "default": "${workspaceFolder}",
+              "description": "Provider working directory. Relative paths resolve from the workspace folder. Supports ${workspaceFolder}, ${packagePath}, ${userHome}, and ${env:NAME}."
+            },
+            "environment": {
+              "type": "object",
+              "default": {},
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Environment variables merged over the extension host environment for the provider. Values support ${workspaceFolder}, ${packagePath}, ${userHome}, ${pathSeparator}, and ${env:NAME}."
+            },
+            "scope": {
+              "type": "string",
+              "enum": [
+                "package",
+                "workspace"
+              ],
+              "default": "package",
+              "description": "Run once per package, or once per workspace folder per test run. Workspace scope cannot use ${packagePath}."
+            }
+          },
+          "additionalProperties": false
+        },
+        "odinTestExplorer.testSuites": {
+          "type": "array",
+          "scope": "resource",
+          "default": [],
+          "description": "Source roots whose discovered packages are tested together in one Odin invocation.",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "path"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Display name used in test output."
+              },
+              "path": {
+                "type": "string",
+                "description": "Suite source root. Relative paths resolve from the containing workspace folder."
+              },
+              "arguments": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "default": [],
+                "description": "Additional Odin compiler arguments for this suite, commonly including -all-packages."
+              }
+            },
+            "additionalProperties": false
+          }
         },
         "odinTestExplorer.exclude": {
           "type": "string",

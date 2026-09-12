@@ -1,4 +1,5 @@
 import * as assert from 'assert';
+import { parseArgumentProviderResult } from '../arguments';
 import { createTestId, parseDiscoveryResponse } from '../discovery';
 import { normalizeOutput } from '../process';
 
@@ -41,5 +42,32 @@ suite('Odin Test Explorer', () => {
 	/** Verifies streamed output uses VS Code's expected terminal line endings. */
 	test('normalizes output to CRLF', () => {
 		assert.strictEqual(normalizeOutput('one\ntwo\r\n'), 'one\r\ntwo\r\n');
+	});
+
+	/** Verifies providers can return arguments alone for simple integrations. */
+	test('parses argument provider array output', () => {
+		const result = parseArgumentProviderResult('["-debug","-define:MODE=test"]');
+
+		assert.deepStrictEqual(result.arguments, ['-debug', '-define:MODE=test']);
+		assert.deepStrictEqual(result.environment, {});
+	});
+
+	/** Verifies providers can configure both link-time and runtime behavior. */
+	test('parses structured argument provider output', () => {
+		const result = parseArgumentProviderResult(JSON.stringify({
+			arguments: ['-extra-linker-flags:-ljulia'],
+			environment: { LD_LIBRARY_PATH: '/opt/julia/lib' },
+		}));
+
+		assert.deepStrictEqual(result.arguments, ['-extra-linker-flags:-ljulia']);
+		assert.deepStrictEqual(result.environment, { LD_LIBRARY_PATH: '/opt/julia/lib' });
+	});
+
+	/** Verifies malformed provider contracts fail with an actionable error. */
+	test('rejects invalid argument provider output', () => {
+		assert.throws(
+			() => parseArgumentProviderResult('{"arguments":"-debug"}'),
+			/Argument provider output must be/,
+		);
 	});
 });
