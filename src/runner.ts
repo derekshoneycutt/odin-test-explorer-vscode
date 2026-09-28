@@ -193,12 +193,14 @@ export function createInvocationPlans(
 export function buildOdinArguments(
   plan: TestInvocationPlan,
   reportPath: string,
+  executablePath: string,
   options: TestInvocationOptions,
 ): string[] {
   const selectors = plan.tests.map(({ test }) => `${test.package_name}.${test.name}`).join(',');
   return [
     'test',
     plan.sourcePath,
+    `-out:${executablePath}`,
     `-define:ODIN_TEST_JSON_REPORT=${reportPath}`,
     `-define:ODIN_TEST_NAMES=${selectors}`,
     '-define:ODIN_TEST_FANCY=false',
@@ -224,8 +226,13 @@ async function executeInvocation(
     return;
   }
 
-  const reportPath = path.join(runDirectory, `${randomUUID()}.json`);
-  const args = buildOdinArguments(plan, reportPath, options);
+  const invocationId = randomUUID();
+  const reportPath = path.join(runDirectory, `${invocationId}.json`);
+  const executablePath = path.join(
+    runDirectory,
+    `${invocationId}${process.platform === 'win32' ? '.exe' : ''}`,
+  );
+  const args = buildOdinArguments(plan, reportPath, executablePath, options);
   appendInvocationDetails(run, helper.getOdinPath(), args, plan.workspacePath, options.environment);
   let result: ProcessResult;
   try {

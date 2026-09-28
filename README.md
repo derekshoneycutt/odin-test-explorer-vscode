@@ -85,7 +85,10 @@ Example workspace configuration:
 Settings in `.vscode/settings.json` apply to that project. Every `odin test` process and
 its resulting test executable run with that workspace folder as their working directory.
 This makes runtime paths such as `assets/config.json` relative to the workspace root even
-when the tested package is nested below it.
+when the tested package is nested below it. Generated test executables and JSON reports
+are placed in extension-owned per-run storage and removed when the run completes or is
+cancelled. Code that resolves assets relative to the executable should provide its own
+explicit test asset root.
 
 In a multi-root workspace, `testArguments`, `argumentProvider`, and `testSuites` are
 resolved independently for the folder containing each package. Processes and cached
@@ -194,8 +197,8 @@ Provider, configuration, compilation, test, and missing-report failures are iden
 separately.
 
 Cancellation terminates the active provider or Odin process tree where supported, marks
-tests that did not finish as skipped, and removes per-run reports. Linux and macOS use a
-process group; Windows uses `taskkill` for descendant termination.
+tests that did not finish as skipped, and removes per-run reports and executables. Linux
+and macOS use a process group; Windows uses `taskkill` for descendant termination.
 
 ## Development
 

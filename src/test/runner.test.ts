@@ -67,12 +67,14 @@ suite('Test runner', () => {
       suiteArguments: ['-all-packages'],
       tests: [selected('a', '/workspace/src/a', 'alpha')],
     };
-    const args = buildOdinArguments(plan, '/tmp/report.json', {
+    const args = buildOdinArguments(plan, '/tmp/report.json', '/tmp/test-binary', {
       arguments: ['-extra-linker-flags:-L/a path/lib -ljulia'],
       environment: {},
       workspacePath: '/workspace',
     });
 
+  assert.ok(args.includes('-out:/tmp/test-binary'));
+    assert.strictEqual(args.filter((argument) => argument.startsWith('-out:')).length, 1);
     assert.ok(args.includes('-define:ODIN_TEST_NAMES=pkg.alpha'));
     assert.ok(args.includes('-define:ODIN_TEST_JSON_REPORT=/tmp/report.json'));
     assert.strictEqual(args.filter((argument) => argument.includes('-extra-linker-flags')).length, 1);
@@ -114,6 +116,14 @@ suite('Test runner', () => {
       cwd = options.cwd;
       environment = options.env;
       commandArguments = args;
+      const outputArguments = args.filter((argument) => argument.startsWith('-out:'));
+      assert.strictEqual(outputArguments.length, 1);
+      const outputArgument = outputArguments[0];
+      assert.ok(outputArgument);
+      const executablePath = outputArgument.slice('-out:'.length);
+      assert.strictEqual(path.dirname(executablePath).startsWith(storagePath), true);
+      assert.strictEqual(path.extname(executablePath), process.platform === 'win32' ? '.exe' : '');
+      await fs.writeFile(executablePath, 'fake executable');
       const reportArgument = args.find((argument) => argument.startsWith('-define:ODIN_TEST_JSON_REPORT='));
       assert.ok(reportArgument);
       await fs.writeFile(reportArgument.slice(reportArgument.indexOf('=') + 1), JSON.stringify({
